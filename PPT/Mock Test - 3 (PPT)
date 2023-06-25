@@ -1,0 +1,62 @@
+Implement a stack using a list in Python. Include the necessary methods such as push, pop, and isEmpty.
+
+
+Solution:
+class Stack:
+    def __init__(self):
+        self.stack = []
+
+    def push(self, item):
+        self.stack.append(item)
+
+    def pop(self):
+        if not self.isEmpty():
+            return self.stack.pop()
+        else:
+            return None
+
+    def isEmpty(self):
+        return len(self.stack) == 0
+
+#Driver code
+stack = Stack()
+
+stack.push(1)
+stack.push(2)
+stack.push(3)
+
+print(stack.pop())  # Outputs: 3
+print(stack.isEmpty())  # Outputs: False
+print(stack.pop())  # Outputs: 2
+
+
+
+Implement a queue using a list in Python. Include the necessary methods such as enqueue, dequeue, and isEmpty.
+
+Solution:
+class Queue:
+    def __init__(self):
+        self.queue = []
+
+    def enqueue(self, item):
+        self.queue.append(item)
+
+    def dequeue(self):
+        if not self.isEmpty():
+            return self.queue.pop(0)
+        else:
+            return None
+
+    def isEmpty(self):
+        return len(self.queue) == 0
+
+#Driver code:
+queue = Queue()
+
+queue.enqueue(1)
+queue.enqueue(2)
+queue.enqueue(3)
+
+print(queue.dequeue())  # Outputs: 1
+print(queue.isEmpty())  # Outputs: False
+print(queue.dequeue())  # Outputs: 2
