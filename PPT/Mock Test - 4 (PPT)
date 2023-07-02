@@ -1,0 +1,165 @@
+1. Write a PySpark code to read a CSV file named "employees.csv" containing the following columns: "employee_id", "name", "age", "department".
+Display the top 10 records from the DataFrame.
+Solution: 
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.getOrCreate()
+
+# Read the CSV file into a DataFrame
+df = spark.read
+      .format('csv')
+      .option("header",True)
+      .option("inferSchema",True)
+      .option("path",'D:/Spark/employee.csv')
+      .load
+df.show(10)
+
+2.  Given a PySpark DataFrame named "sales_data" with columns "product_name" and "revenue", 
+write a code to calculate the total revenue for each product and display the result in descending order.
+
+Solution:
+NOTE: Considering sales_data is in csv format
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.getOrCreate()
+sales_data = spark.read
+.format('csv')
+.option("header", True)
+.option("inferSchema", True)
+.option("path", "D:/Spark/sales_data.csv")
+.load()
+sales_data.createOrReplaceTempView("sales_data")
+total_revenue_df = spark.sql("""
+    SELECT product_name, SUM(revenue) as total_revenue
+    FROM sales_data
+    GROUP BY product_name
+    ORDER BY total_revenue DESC
+""")
+total_revenue_df.show()
+
+
+3. Write a PySpark code to read a JSON file named "students.json" containing student records with the following schema: "name" (string), "age" (integer), "grade" (string). 
+Filter the DataFrame to include only students whose age is greater than 18.
+
+Solution:
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.getOrCreate()
+students_data = spark.read.json("students.json")
+filtered_students_data = students_data.filter(students_data.age > 18)
+filtered_students_data.show()
+
+4. Consider a PySpark DataFrame named "transactions" with columns "transaction_id", "user_id", and "amount".
+Write a code to calculate the average transaction amount for each user and display the result.
+
+Solution:
+from spark.sql import SparkSession
+
+spark = SparkSession.builder.getOrCreate()
+transactions_df = spark.read
+                  .format('csv')
+                  .option('header',True)
+                  .option('inferschema',True)
+                  .option('path',"D:/Spark/transactions.csv")
+                  .load()
+transactions_df.sql("""
+select user_id, avg(amount) from transactions group by user_id
+""").show()
+
+5. Given a PySpark DataFrame named "logs" with columns "timestamp" (timestamp) and "event" (string), 
+write a code to count the number of events that occurred in each hour and display the result sorted by the hour.
+
+Solution:
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import hour, count
+spark = SparkSession.builder.appName("EventCount").getOrCreate()
+logs = spark.read.json("data_logs.json") #assumed file name is data_logs and is read as a df 
+logs_with_hour = logs.withColumn("hour", hour("timestamp"))
+event_count_df = logs_with_hour.groupBy("hour").agg(count("event").alias("event_count"))
+event_count_df.orderBy("hour").show()
+
+6.  Retrieve all the customers from the "Customers" table whose age is greater than 25 and have made at least one purchase.
+
+Solution: Considering there are 2 tables customers and purchases tables
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.appName("CustomerQuery").getOrCreate()
+
+customers_df = spark.read.format("jdbc").option("url", "jdbc:mysql://localhost:3306/your_database") \
+                                 .option("dbtable", "Customers") \
+                                 .option("user", "config") \
+                                 .option("password", "config") \
+                                 .load()
+
+# Read the "Purchases" table into a DataFrame
+purchases_df = spark.read.format("jdbc").option("url", "jdbc:mysql://localhost:3306/your_database") \
+                                 .option("dbtable", "Purchases") \
+                                 .option("user", "config") \
+                                 .option("password", "config") \
+                                 .load()
+
+customers_df.createOrReplaceTempView("Customers")
+result_df = spark.sql("""
+    SELECT *
+    FROM Customers
+    WHERE age > 25 AND customer_id IN (
+        SELECT DISTINCT customer_id
+        FROM Purchases
+    )
+""").show()
+
+7. Find the total number of orders placed by each customer and display the results in descending order of the number of orders.
+
+Solution:
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import count, desc
+spark = SparkSession.builder.appName("OrdersAnalysis").getOrCreate()
+orders_df = spark.read.format("jdbc").option("url", "jdbc:mysql://localhost:3306/your_database") \
+                                 .option("dbtable", "Orders") \
+                                 .option("user", "config") \
+                                 .option("password", "config") \
+                                 .load()
+orders_count_df = orders_df.groupBy("customer_id").agg(count("order_id").alias("total_orders"))
+sorted_orders_count_df = orders_count_df.orderBy(desc("total_orders"))
+sorted_orders_count_df.show()
+
+8. Retrieve the names of all products that are currently out of stock from the "Products" table.
+
+Solution:
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.appName("OutOfStockProducts").getOrCreate()
+products_df = spark.read.format("jdbc").option("url", "jdbc:mysql://localhost:3306/your_database") \
+                                      .option("dbtable", "Products") \
+                                      .option("user", "config") \
+                                      .option("password", "config") \
+                                      .load()
+out_of_stock_df = products_df.filter(products_df.stock_quantity == 0)
+out_of_stock_names_df = out_of_stock_df.select("product_name").show()
+
+
+9. Calculate the average price of all products in each category and display the results along with the category name.
+
+Solution:
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import avg
+spark = SparkSession.builder.appName("AveragePriceByCategory").getOrCreate()
+products_df = spark.read.format("jdbc").option("url", "jdbc:mysql://localhost:3306/your_database") \
+                                      .option("dbtable", "Products") \
+                                      .option("user", "config") \
+                                      .option("password", "config") \
+                                      .load()
+avg_price_by_category_df = products_df.groupby("category").agg(avg("price").alias("average_price")).show()
+
+
+10. Retrieve the top 5 customers who have spent the highest total amount on purchases.
+
+Solution:
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import desc
+spark = SparkSession.builder.appName("TopCustomersByTotalAmount").getOrCreate()
+transactions_df = spark.read.format("jdbc").option("url", "jdbc:mysql://localhost:3306/your_database") \
+                                           .option("dbtable", "Transactions") \
+                                           .option("user", "your_username") \
+                                           .option("password", "your_password") \
+                                           .load()
+total_amount_by_customer_df = transactions_df.groupby("customer_id").sum("amount").alias("total_amount")
+sorted_total_amount_df = total_amount_by_customer_df.orderBy(desc("total_amount"))
+top_5_customers_df = sorted_total_amount_df.limit(5).show()
+
